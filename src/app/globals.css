@@ -356,6 +356,7 @@ main {
 }
 
 .generate-gradient {
+  cursor: pointer;
   padding: 1rem;
   margin: 2rem 0;
   font-size: 1.2rem;
@@ -364,4 +365,13 @@ main {
   color: #1e1e29;
   font-weight: 500;
   width: 100%;
+  transition: all 0.3s ease;
+}
+
+.generate-gradient:hover {
+  background-color: #87cdf0;
+}
+
+.generate-gradient:active {
+  background-color: #5d93ad;
 }
