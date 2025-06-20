@@ -1,11 +1,10 @@
-// app/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Color from "colorjs.io";
 
 type RGB = [number, number, number];
 
-// ✅ Data Blok Minecraft dengan RGB
 const blocks: { id: string; rgb: RGB; name: string }[] = [
   { id: "acacia_log.png", rgb: [105, 98, 88], name: "Acacia Log" },
   { id: "acacia_planks.png", rgb: [170, 91, 51], name: "Acacia Planks" },
@@ -414,7 +413,6 @@ const blocks: { id: string; rgb: RGB; name: string }[] = [
   { id: "yellow_terracotta.png", rgb: [186, 133, 35], name: "Yellow Terracotta" },
 ];
 
-// 🔍 Cari blok terdekat berdasarkan RGB
 function getClosestBlockByRgb(targetRgb: RGB) {
   let closestBlock = blocks[0];
   let smallestDistance = Infinity;
@@ -434,7 +432,29 @@ function getClosestBlockByRgb(targetRgb: RGB) {
   return closestBlock;
 }
 
-// 🎨 Bikin gradasi RGB
+function getClosestBlockByLab(targetRgb: RGB) {
+  const normalize = (rgb: RGB): [number, number, number] =>
+    [rgb[0], rgb[1], rgb[2]].map((v) => Math.max(0, Math.min(255, v)) / 255) as [number, number, number];
+
+  const targetLab = new Color("srgb", normalize(targetRgb)).to("lab");
+
+  let closestBlock = blocks[0];
+  let minDeltaE = Infinity;
+
+  for (const block of blocks) {
+    const blockLab = new Color("srgb", normalize(block.rgb)).to("lab");
+
+    const deltaE = targetLab.deltaE(blockLab, { method: "2000" });
+
+    if (deltaE < minDeltaE) {
+      minDeltaE = deltaE;
+      closestBlock = block;
+    }
+  }
+
+  return closestBlock;
+}
+
 function generateRgbGradient(start: RGB, end: RGB, steps: number): RGB[] {
   const gradient: RGB[] = [];
 
@@ -505,10 +525,11 @@ function EditSlider({ min, max, defaultValue = 0, step = 1, percentage = false, 
   );
 }
 
-// 🔨 Komponen Page
 export default function GradientPage() {
   const [startBlockId, setStartBlockId] = useState("packed_ice.png");
   const [endBlockId, setEndBlockId] = useState("redstone_ore.png");
+  const [hideDupe, setHideDupe] = useState(true);
+  const [CIELAB, setCIELAB] = useState(false);
 
   const [steps, setSteps] = useState(8);
   const [gradientResult, setGradientResult] = useState<{ id: string; rgb: RGB; name: string }[]>([]);
@@ -527,14 +548,14 @@ export default function GradientPage() {
 
     const gradient = generateRgbGradient(startRgb, endRgb, steps);
     const closestBlocks = gradient.map((color) => {
-      const closest = getClosestBlockByRgb(color);
+      const closest = CIELAB ? getClosestBlockByLab(color) : getClosestBlockByRgb(color);
       return {
         id: closest.id,
         rgb: closest.rgb as RGB,
         name: closest.name,
       };
     });
-    setGradientResult(closestBlocks);
+    setGradientResult(hideDupe ? closestBlocks.filter((obj, index, self) => index === self.findIndex((o) => o.id === obj.id)) : closestBlocks);
   };
 
   const rgbToHex = ([r, g, b]: RGB) =>
@@ -545,61 +566,90 @@ export default function GradientPage() {
       .toUpperCase();
 
   return (
-    <main className="p-8 max-w-screen-md mx-auto text-center">
-      <h1 className="text-3xl font-bold mb-6">Minecraft Block Gradient Generator</h1>
+    <main className="text-center">
+      <div className="edit-container p-8">
+        <div className="max-w-screen-md mx-auto pt-12">
+          <h1 className="text-3xl font-bold mb-6">Minecraft Block Gradient Generator</h1>
 
-      <div className="sel-blocks-container flex flex-col">
-        <div
-          className="sel-blocks flex flex-row"
-          style={{
-            background: `linear-gradient(to right, ${rgbToHex(startBlock.rgb)} 0%, ${rgbToHex(startBlock.rgb)} 20%, ${rgbToHex(
-              endBlock.rgb
-            )} 80%, ${rgbToHex(endBlock.rgb)} 100%)`,
-          }}
-        >
-          <img
-            src={`/assets/${startBlock.id}`}
-            alt={startBlock.name}
-            onClick={() => {
-              setMenuOpen(true);
-              setCurrentSelected(0);
-            }}
-          />
-          <img
-            src={`/assets/${endBlock.id}`}
-            alt={endBlock.name}
-            onClick={() => {
-              setMenuOpen(true);
-              setCurrentSelected(1);
-            }}
-          />
-        </div>
-        <div className="flex justify-between">
-          <button>{startBlock.name}</button>
-          <button>{endBlock.name}</button>
+          <div className="sel-blocks-container flex flex-col">
+            <div
+              className="sel-blocks flex flex-row"
+              style={{
+                background: `linear-gradient(to right, ${rgbToHex(startBlock.rgb)} 0%, ${rgbToHex(startBlock.rgb)} 20%, ${rgbToHex(
+                  endBlock.rgb
+                )} 80%, ${rgbToHex(endBlock.rgb)} 100%)`,
+              }}
+            >
+              <img
+                src={`/assets/${startBlock.id}`}
+                alt={startBlock.name}
+                onClick={() => {
+                  setMenuOpen(true);
+                  setCurrentSelected(0);
+                }}
+              />
+              <img
+                src={`/assets/${endBlock.id}`}
+                alt={endBlock.name}
+                onClick={() => {
+                  setMenuOpen(true);
+                  setCurrentSelected(1);
+                }}
+              />
+            </div>
+            <div className="flex justify-between items-center">
+              <button
+                onClick={() => {
+                  setMenuOpen(true);
+                  setCurrentSelected(0);
+                }}
+              >
+                {startBlock.name}
+              </button>
+              <p>click the block to change starting & ending block</p>
+              <button
+                onClick={() => {
+                  setMenuOpen(true);
+                  setCurrentSelected(1);
+                }}
+              >
+                {endBlock.name}
+              </button>
+            </div>
+          </div>
+
+          <div className="length-blocks">
+            <p>Gradient chain length</p>
+            <EditSlider min={2} max={32} defaultValue={steps} onChange={setSteps} />
+          </div>
+          <div className="flex gap-10 justify-center my-5">
+            <label className="checkbox-container">
+              <input className="check-input" type="checkbox" id="hidedupe" checked={hideDupe} onChange={() => setHideDupe(!hideDupe)} />
+              Hide duplicates
+            </label>
+            <label className="checkbox-container">
+              <input className="check-input" type="checkbox" id="CIELAB" checked={CIELAB} onChange={() => setCIELAB(!CIELAB)} />
+              Use CIELAB
+            </label>
+          </div>
+
+          <button onClick={handleGenerate} className="generate-gradient">
+            Generate Gradient
+          </button>
         </div>
       </div>
 
-      <div className="length-blocks">
-        <p>Gradient chain length</p>
-        <EditSlider min={2} max={32} defaultValue={steps} onChange={setSteps}/>
-      </div>
-
-      <button onClick={handleGenerate} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-        🚀 Generate Gradient
-      </button>
-
-      <div className="mt-6 grid grid-cols-4 gap-4">
+      <div className="results-container text-left p-8">
         {gradientResult.map((block, idx) => (
-          <div key={idx} className="text-center tooltip">
+          <div key={idx} className="tooltip">
             <img src={`/assets/${block.id}`} alt={block.name} style={{ width: "100px", imageRendering: "pixelated" }} />
             <span className="tooltip-text">{block.name}</span>
           </div>
         ))}
       </div>
 
-      <div className={`menu-blocks ${menuOpen ? "shown" : ""}`}>
-        <div className="menu-head flex items-center">
+      <div className={`menu-blocks p-5 ${menuOpen ? "shown" : ""}`}>
+        <div className="menu-head flex items-center max-w-screen-lg mx-auto">
           <input
             type="text"
             placeholder="Search blocks..."
@@ -610,19 +660,21 @@ export default function GradientPage() {
           <img src="/ui/close.svg" className="menu-close w-6 h-6 cursor-pointer" onClick={() => setMenuOpen(false)} />
         </div>
 
-        {filteredBlocks.map((block, index) => (
-          <div key={block.id} className="menu-block sel-blocks tooltip flex flex-row">
-            <img
-              src={`/assets/${block.id}`}
-              alt={block.name}
-              onClick={() => {
-                currentSelected === 0 ? setStartBlockId(block.id) : setEndBlockId(block.id);
-                setMenuOpen(false);
-              }}
-            />
-            <span className="tooltip-text">{block.name}</span>
-          </div>
-        ))}
+        <div className="max-w-screen-lg mx-auto">
+          {filteredBlocks.map((block, index) => (
+            <div key={block.id} className="menu-block sel-blocks tooltip flex flex-row">
+              <img
+                src={`/assets/${block.id}`}
+                alt={block.name}
+                onClick={() => {
+                  currentSelected === 0 ? setStartBlockId(block.id) : setEndBlockId(block.id);
+                  setMenuOpen(false);
+                }}
+              />
+              <span className="tooltip-text">{block.name}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </main>
   );

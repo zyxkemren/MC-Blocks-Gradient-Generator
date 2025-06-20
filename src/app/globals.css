@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #272934;
+  --background: #070707;
   --foreground: #ededed;
 }
 
@@ -121,14 +121,14 @@ body {
   margin: 10px 0 0;
   display: flex;
   flex-direction: row;
-  width: 100%; 
+  width: 100%;
 }
 
 .subedit-range {
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex-grow: 1; 
+  flex-grow: 1;
 }
 
 .subedit-range-container {
@@ -145,7 +145,7 @@ body {
   height: 4px;
   border-radius: 2px;
   outline: none;
-  background: linear-gradient(to right, #5865f2 0%,  100%);
+  background: linear-gradient(to right, #5865f2 0%, 100%);
 }
 
 .subedit-range-desc-container {
@@ -204,25 +204,35 @@ body {
   outline: 2px solid #5865f2;
 }
 
-.sel-blocks-container button {
-  padding: 5px 10px;
-  margin: 10px 0;
-  border-radius: 5px;
-  background-color: rgba(82, 82, 92, 0.25);
-  outline: 2px solid transparent;
-  transition: all 0.3s ease;
+main {
+  margin: 0 auto;
 }
 
-main {
-  margin: 50px auto;
+.edit-container {
+  background-color: #1e1e29;
+  width: 100vw;
 }
 
 .sel-blocks-container {
   margin: 50px 0;
 }
 
+.sel-blocks-container p {
+  color: rgba(211, 211, 211, 0.5);
+  font-size: 0.9rem;
+}
+
+.sel-blocks-container button {
+  cursor: pointer;
+  padding: 5px 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  background-color: rgba(82, 82, 92, 0);
+  outline: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
 .sel-blocks-container button:hover {
-  background-color: rgba(82, 82, 92, 0.3);
   outline: 2px solid rgba(255, 255, 255, 0.75);
 }
 
@@ -257,7 +267,7 @@ main {
 
 .menu-blocks {
   opacity: 0;
-  z-index: -1;
+  visibility: hidden;
   position: fixed;
   justify-content: center;
   align-items: center;
@@ -267,18 +277,19 @@ main {
   left: 0;
   height: 100dvh;
   width: 100vw;
-  padding: 10px 20vw;
+  padding: 10px auto;
   overflow-y: auto;
-  transition: opacity 0.3s ease;
+  overflow-x: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .menu-blocks.shown {
-  opacity: 100%;
-  z-index: 5;
+  opacity: 1;
+  visibility: visible;
 }
 
 .menu-head {
-  margin: 50px 30px;
+  margin: 50px auto;
   gap: 20px;
 }
 
@@ -287,6 +298,7 @@ main {
   border: none;
   outline: 2px solid rgba(255, 255, 255, 0.2);
   transition: all 0.2s ease;
+  width: 100%;
 }
 
 .menu-blocks input:focus {
@@ -307,3 +319,49 @@ main {
   width: unset;
 }
 
+.checkbox-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap:  0.5rem;
+}
+
+.check-input {
+  width: 20px;
+  height: 20px;
+  appearance: none;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 4px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.check-input:checked {
+  background-color: #5865f2;
+  border: 1px solid #999999;
+  position: relative;
+}
+
+.check-input:checked::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 3px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.generate-gradient {
+  padding: 1rem;
+  margin: 2rem 0;
+  font-size: 1.2rem;
+  border-radius: 5px;
+  background-color: #a7d5ec;
+  color: #1e1e29;
+  font-weight: 500;
+  width: 100%;
+}
